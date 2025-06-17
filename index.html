@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Time Tornado - Focus Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Rubik', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1740&q=80') no-repeat center center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      text-align: center;
+      color: #fff;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    h1 {
+      font-weight: 700;
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .button-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .timer {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    .tagline {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      opacity: 0.8;
+    }
+
+    input[type="number"] {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      width: 80px;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    #focusCompleteMsg {
+      margin-top: 15px;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #aaffaa;
+      display: none;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Landing Section -->
+  <div id="landing" class="glass-card">
+    <h1>🌪 Welcome to the Focus Room</h1>
+    <p style="margin: 20px 0; font-size: 1.1rem; opacity: 0.85;">
+      "Conquer time before it consumes you."
+    </p>
+    <div style="margin-bottom: 20px;">
+      <label for="customTime">Set Timer (minutes): </label>
+      <input type="number" id="customTime" min="1" max="120" value="25">
+    </div>
+    <button class="start-btn" onclick="startTimer()">▶ Start Focus</button>
+  </div>
+
+  <!-- Timer Section -->
+  <div class="glass-card" id="focusCard" style="display: none;">
+    <div class="timer" id="timer">25:00</div>
+    <div class="button-box">
+      <button onclick="pauseTimer()">⏸ Pause</button>
+      <button onclick="resetTimer()">🔁 Reset</button>
+    </div>
+    <div class="button-box">
+      <button onclick="playRain()">🌧 Rain</button>
+      <button onclick="playCafe()">☕ Café</button>
+      <button onclick="playBirds()">🐦 Birds</button>
+      <button onclick="stopSound()">⏹ Stop</button>
+    </div>
+    <div class="tagline">Stay focused or get thrown out 💥</div>
+    <div id="focusCompleteMsg">🎉 Hooray! That focus session is complete!</div>
+  </div>
+
+  <audio id="endSound" src="ting.mp3"></audio>
+
+  <script>
+    let currentAudio = null;
+    let timerInterval;
+    let timeLeft = 25 * 60;
+    let isPaused = false;
+    let inFocusMode = false;
+
+    const endSound = document.getElementById("endSound");
+
+    const rainSounds = [
+      "rain-thunder.mp3.mp3",
+      "rain-sound.mp3.mp3",
+      "rain-and-birds.mp3.mp3",
+      "calming-rain.mp3.mp3"
+    ];
+
+    const cafeSounds = [
+      "cafe-noise-32940.mp3",
+      "busy-cafe-ambient-sound-scape-52994.mp3"
+    ];
+
+    const birdSounds = [
+      "birds-in-the-morning-60365.mp3",
+      "birds-in-the-morning-24614.mp3",
+      "020188_bird-park-ambience-74610.mp3"
+    ];
+
+    function getRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function playRain() {
+      playSound(getRandom(rainSounds));
+    }
+
+    function playCafe() {
+      playSound(getRandom(cafeSounds));
+    }
+
+    function playBirds() {
+      playSound(getRandom(birdSounds));
+    }
+
+    function playSound(src) {
+      stopSound();
+      currentAudio = new Audio(src);
+      currentAudio.loop = true;
+      currentAudio.volume = 0.6;
+      currentAudio.play().catch((e) => console.log("Audio blocked until user interacts."));
+    }
+
+    function stopSound() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+      }
+    }
+
+    function updateDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      document.getElementById("timer").textContent =
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      const customMinutes = parseInt(document.getElementById("customTime").value) || 25;
+      timeLeft = customMinutes * 60;
+      updateDisplay();
+      document.getElementById("landing").style.display = "none";
+      document.getElementById("focusCard").style.display = "block";
+      document.getElementById("focusCompleteMsg").style.display = "none";
+      inFocusMode = true;
+      if (timerInterval || isPaused) return;
+      timerInterval = setInterval(() => {
+        if (!isPaused) {
+          timeLeft--;
+          updateDisplay();
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            stopSound();
+            endSound.play();
+            inFocusMode = false;
+            document.getElementById("focusCompleteMsg").style.display = "block";
+            setTimeout(() => {
+              document.getElementById("landing").style.display = "block";
+              document.getElementById("focusCard").style.display = "none";
+            }, 5000);
+          }
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      isPaused = !isPaused;
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      const customMinutes = parseInt(document.getElementById("customTime").value) || 25;
+      timeLeft = customMinutes * 60;
+      isPaused = false;
+      updateDisplay();
+    }
+
+    document.body.addEventListener("click", () => {
+      new (window.AudioContext || window.webkitAudioContext)();
+    }, { once: true });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && inFocusMode) {
+        alert("🚫 You left the focus room! Session ended.");
+        resetTimer();
+        stopSound();
+        inFocusMode = false;
+        document.getElementById("landing").style.display = "block";
+        document.getElementById("focusCard").style.display = "none";
+      }
+    });
+
+    updateDisplay();
+  </script>
+
+</body>
+</html>
